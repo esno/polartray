@@ -10,8 +10,19 @@ class PolarTray(Gtk.StatusIcon):
     self.set_from_icon_name('help-about')
     self.set_has_tooltip(True)
     self.set_visible(True)
+    self.connect("popup_menu", self.on_secondary_click)
 
     Gtk.main()
+
+  def on_secondary_click(self, widget, button, time):
+    menu = Gtk.Menu()
+
+    menu_quit = Gtk.MenuItem("Quit")
+    menu.append(menu_quit)
+    menu_quit.connect("activate", Gtk.main_quit)
+
+    menu.show_all()
+    menu.popup(None, None, None, self, 3, time)
 
 if __name__ == '__main__':
   try:
