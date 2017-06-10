@@ -18,7 +18,6 @@ class PolarTray(Gtk.StatusIcon):
     self.connect("popup_menu", self._popup)
 
     self.devices = {}
-    self._deviceCount = 0
 
   def _popup(self, widget, button, time):
     menu = Gtk.Menu()
@@ -34,13 +33,14 @@ class PolarTray(Gtk.StatusIcon):
     info = Device.get_info(dev)
 
     if info['serial_number'] not in self.devices:
+      print('register device %s (%s)' % (info['product_name'], info['serial_number']))
       self.devices[info['serial_number']] = {
         'vendorId': info['vendor_id'],
         'productId': info['product_id'],
         'name': info['product_name'],
-        'manufacturer': info['manufacturer']
+        'manufacturer': info['manufacturer'],
+        'device': dev
       }
-      self._deviceCount += 1
 
     return info
 
@@ -48,17 +48,30 @@ class PolarTray(Gtk.StatusIcon):
     self.scanning = True
     while self.scanning:
       devices = Device.list()
+      scannedDevices = {}
 
       if len(devices) > 0:
         for i, dev in enumerate(devices):
           try:
             info = self._registerDevice(dev)
-            print('%s (%s)' % (info['product_name'], info['serial_number']))
+            scannedDevices[info['serial_number']] = {
+              'vendorId': info['vendor_id'],
+              'productId': info['product_id'],
+              'name': info['product_name'],
+              'manufacturer': info['manufacturer'],
+              'device': dev
+            }
           except ValueError as err:
             if 'langid' in err.message:
               print("Can't get device info. Origin Error: %s" % err)
 
+      self._unregisterDevices({ k: self.devices[k] for k in set(self.devices) - set(scannedDevices) })
       time.sleep(1)
+
+  def _unregisterDevices(self, devices):
+    for k, v in devices.iteritems():
+      print('unregister device %s (%s)' % (v['name'], k))
+      self.devices.pop(k, None)
 
   def run(self):
     self.threadDeviceScan = threading.Thread(target = self._scanDevices)
