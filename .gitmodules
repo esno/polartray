@@ -1,3 +1,6 @@
 [submodule "3rd-party/loophole"]
 	path = 3rd-party/loophole
 	url = https://github.com/rsc-dev/loophole.git
+[submodule "3rd-party/A360"]
+	path = 3rd-party/A360
+	url = https://github.com/rsc-dev/A360.git
