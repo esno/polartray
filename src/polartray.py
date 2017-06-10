@@ -13,12 +13,24 @@ class PolarTray(Gtk.StatusIcon):
   def __init__(self):
     Gtk.StatusIcon.__init__(self)
     self.set_visible(False)
-    self.set_from_icon_name('help-about')
+    self.set_from_icon_name('preferences-system-sharing')
     self.set_has_tooltip(True)
     self.connect("popup_menu", self._popup)
 
     self.deviceCount = 0
+    self.syncCount = 0
     self.devices = {}
+
+  def _changeIcon(self, sync):
+    if sync == True:
+      self.syncCount += 1
+    else:
+      self.syncCount -= 1
+
+    if self.syncCount > 0:
+      self.set_from_icon_name('stock_save')
+    else:
+      self.set_from_icon_name('preferences-system-sharing')
 
   def _popup(self, widget, button, time):
     menu = Gtk.Menu()
@@ -48,6 +60,12 @@ class PolarTray(Gtk.StatusIcon):
       }
       self.deviceCount += 1
 
+      self.devices[info['serial_number']]['thread'] = threading.Thread(
+        target = self._syncDevice,
+        args = [info['serial_number']]
+      )
+      self.devices[info['serial_number']]['thread'].start()
+
     return info
 
   def _scanDevices(self):
@@ -74,6 +92,29 @@ class PolarTray(Gtk.StatusIcon):
       self._unregisterDevices({ k: self.devices[k] for k in set(self.devices) - set(scannedDevices) })
       GLib.idle_add(self._toggleTray)
       time.sleep(1)
+
+  def _syncDevice(self, serial):
+    print('connecting device %s (%s)' % (
+      self.devices[serial]['name'],
+      serial
+    ))
+    device = Device(self.devices[serial]['device'])
+    device.open()
+    syncing = True
+
+    GLib.idle_add(self._changeIcon, True)
+
+    while syncing:
+      syncing = False
+      time.sleep(1)
+
+    GLib.idle_add(self._changeIcon, False)
+
+    print('disconnecting device %s (%s)' % (
+      self.devices[serial]['name'],
+      serial
+    ))
+    device.close()
 
   def _toggleTray(self):
     if self.deviceCount > 0:
