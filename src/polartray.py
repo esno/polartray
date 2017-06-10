@@ -4,6 +4,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gtk
 
+import os
 import threading
 import time
 
@@ -104,9 +105,18 @@ class PolarTray(Gtk.StatusIcon):
 
     GLib.idle_add(self._changeIcon, True)
 
-    while syncing:
-      syncing = False
-      time.sleep(1)
+    devMap = device.walk(device.SEP)
+    print('syncing device %s (%s)' % (
+      self.devices[serial]['name'],
+      serial
+    ))
+    for directory in devMap.keys():
+      osDirectory = directory.replace(device.SEP, os.sep)
+      d = devMap[directory]
+      files = [e for e in d.entries if not e.name.endswith(os.sep)]
+      for file in files:
+        if '.BPB' in file.name:
+          data = device.read_file('%s%s' % (directory, file.name))
 
     GLib.idle_add(self._changeIcon, False)
 
