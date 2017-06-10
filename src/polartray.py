@@ -12,19 +12,24 @@ from polar import Device
 class PolarTray(Gtk.StatusIcon):
   def __init__(self):
     Gtk.StatusIcon.__init__(self)
+    self.set_visible(False)
     self.set_from_icon_name('help-about')
     self.set_has_tooltip(True)
-    self.set_visible(True)
     self.connect("popup_menu", self._popup)
 
+    self.deviceCount = 0
     self.devices = {}
 
   def _popup(self, widget, button, time):
     menu = Gtk.Menu()
 
-    menu_quit = Gtk.MenuItem("Quit")
-    menu.append(menu_quit)
-    menu_quit.connect("activate", Gtk.main_quit)
+    for k, v in self.devices.iteritems():
+      menuDevice = Gtk.MenuItem('%s (%s)' % (v['name'], k))
+      menu.append(menuDevice)
+
+    menuQuit = Gtk.MenuItem('Quit')
+    menuQuit.connect("activate", Gtk.main_quit)
+    menu.append(menuQuit)
 
     menu.show_all()
     menu.popup(None, None, None, self, 3, time)
@@ -41,6 +46,7 @@ class PolarTray(Gtk.StatusIcon):
         'manufacturer': info['manufacturer'],
         'device': dev
       }
+      self.deviceCount += 1
 
     return info
 
@@ -66,12 +72,19 @@ class PolarTray(Gtk.StatusIcon):
               print("Can't get device info. Origin Error: %s" % err)
 
       self._unregisterDevices({ k: self.devices[k] for k in set(self.devices) - set(scannedDevices) })
+
+      if self.deviceCount > 0:
+        self.set_visible(True)
+      else:
+        self.set_visible(False)
+
       time.sleep(1)
 
   def _unregisterDevices(self, devices):
     for k, v in devices.iteritems():
       print('unregister device %s (%s)' % (v['name'], k))
       self.devices.pop(k, None)
+      self.deviceCount -= 1
 
   def run(self):
     self.threadDeviceScan = threading.Thread(target = self._scanDevices)
