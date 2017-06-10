@@ -2,7 +2,7 @@
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import GLib, Gtk
 
 import threading
 import time
@@ -72,13 +72,14 @@ class PolarTray(Gtk.StatusIcon):
               print("Can't get device info. Origin Error: %s" % err)
 
       self._unregisterDevices({ k: self.devices[k] for k in set(self.devices) - set(scannedDevices) })
-
-      if self.deviceCount > 0:
-        self.set_visible(True)
-      else:
-        self.set_visible(False)
-
+      GLib.idle_add(self._toggleTray)
       time.sleep(1)
+
+  def _toggleTray(self):
+    if self.deviceCount > 0:
+      self.set_visible(True)
+    else:
+      self.set_visible(False)
 
   def _unregisterDevices(self, devices):
     for k, v in devices.iteritems():
