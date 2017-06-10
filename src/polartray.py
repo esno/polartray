@@ -22,6 +22,9 @@ class PolarTray(Gtk.StatusIcon):
     self.syncCount = 0
     self.devices = {}
 
+    if not os.path.isdir('%s/.local/polartray' % (os.environ['HOME'])):
+      os.makedirs('%s/.local/polartray' % (os.environ['HOME']))
+
   def _changeIcon(self, sync):
     if sync == True:
       self.syncCount += 1
@@ -116,7 +119,15 @@ class PolarTray(Gtk.StatusIcon):
       files = [e for e in d.entries if not e.name.endswith(os.sep)]
       for file in files:
         if '.BPB' in file.name:
+          print('%s%s' % (directory, file.name))
           data = device.read_file('%s%s' % (directory, file.name))
+
+          if not os.path.isdir('%s/.local/polartray%s' % (os.environ['HOME'], directory)):
+            os.makedirs('%s/.local/polartray%s' % (os.environ['HOME'], directory))
+
+          f = '%s/.local/polartray%s%s' % (os.environ['HOME'], directory, file.name)
+          with open(f, 'wb') as fh:
+            fh.write(bytearray(data))
 
     GLib.idle_add(self._changeIcon, False)
 
