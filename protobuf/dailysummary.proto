@@ -1,4 +1,4 @@
-// Reversed by pbd (https://github.com/rsc-dev/pbd)
+import "protobuf/types.proto";
 package data;
 
 message PbActivityGoalSummary {

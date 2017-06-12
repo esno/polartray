@@ -9,15 +9,35 @@ import threading
 import time
 
 from google.protobuf.json_format import MessageToJson
-from protobuf import act_samples_pb2  # ASAMPL0.BPB
-from protobuf import device_pb2       # DEVICE.BPB
+from protobuf import act_dailygoal_pb2
+from protobuf import act_samples_pb2
+from protobuf import dailysummary_pb2
+from protobuf import device_pb2
+from protobuf import identification_pb2
+from protobuf import recovery_times_pb2
+from protobuf import syncinfo_pb2
+from protobuf import user_database_pb2
+from protobuf import user_devset_pb2
+from protobuf import user_id_pb2
+from protobuf import user_physdata_pb2
+from protobuf import user_prefs_pb2
 
 from polar import Device
 
 class PolarTray(Gtk.StatusIcon):
   FILE_MAPPINGS = {
+    'DGOAL.BPB'   : act_dailygoal_pb2   .PbDailyActivityGoal,
     'ASAMPL0.BPB' : act_samples_pb2     .PbActivitySamples,
-    'DEVICE.BPB'  : device_pb2          .PbDeviceInfo
+    'DSUM.BPB'    : dailysummary_pb2    .PbDailySummary,
+    'DEVICE.BPB'  : device_pb2          .PbDeviceInfo,
+    'ID.BPB'      : identification_pb2  .PbIdentifier,
+    'RECOVS.BPB'  : recovery_times_pb2  .PbRecoveryTimes,
+    'SYNCINFO.BPB': syncinfo_pb2        .PbSyncInfo,
+    'UDB.BPB'     : user_database_pb2   .PbUserDb,
+    'UDEVSET.BPB' : user_devset_pb2     .PbUserDeviceSettings,
+    'USERID.BPB'  : user_id_pb2         .PbUserIdentifier,
+    'PHYSDATA.BPB': user_physdata_pb2   .PbUserPhysData,
+    'PREFS.BPB'   : user_prefs_pb2      .PbGeneralPreferences
   }
 
   def __init__(self):

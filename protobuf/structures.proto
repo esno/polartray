@@ -1,4 +1,4 @@
-// Reversed by pbd (https://github.com/rsc-dev/pbd)
+import "protobuf/types.proto";
 
 message PbVolumeTarget {
 	required .PbVolumeTarget.PbVolymeTargetType target_type = 1 ;

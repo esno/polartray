@@ -1,4 +1,5 @@
-// Reversed by pbd (https://github.com/rsc-dev/pbd)
+import "protobuf/types.proto";
+import "protobuf/structures.proto";
 package data;
 
 message PbLocalizationPreferences {

@@ -1,6 +1,5 @@
-// Reversed by pbd (https://github.com/rsc-dev/pbd)
 package data;
-import "types.proto";
+import "protobuf/types.proto";
 
 message PbActivityMetMinGoal {
 	required float goal = 1 ;
