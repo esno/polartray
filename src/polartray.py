@@ -127,6 +127,7 @@ class PolarTray(Gtk.StatusIcon):
       d = devMap[directory]
       files = [e for e in d.entries if not e.name.endswith(os.sep)]
       for file in files:
+        parserFailed = False
         if '.BPB' in file.name:
           data = device.read_file('%s%s' % (directory, file.name))
 
@@ -135,14 +136,6 @@ class PolarTray(Gtk.StatusIcon):
             directory.replace(os.sep, '-').lower(),
             os.path.splitext(file.name)[0].lower()
           )
-
-          f = '%s/.local/polartray/%s%s' % (
-            os.environ['HOME'],
-            dataFileName,
-            os.path.splitext(file.name)[1].lower()
-          )
-          with open(f, 'wb') as fh:
-            fh.write(bytearray(data))
 
           if file.name in self.FILE_MAPPINGS.keys():
             parser = self.FILE_MAPPINGS[file.name]()
@@ -156,8 +149,18 @@ class PolarTray(Gtk.StatusIcon):
               with open(f, 'w') as fh:
                 fh.write(MessageToJson(parser))
             except Exception as err:
+              parserFailed = True
               print('failed to decode %s' % (dataFileName))
               print(err)
+
+          if file.name not in self.FILE_MAPPINGS.keys() or parserFailed == True:
+            f = '%s/.local/polartray/%s%s' % (
+              os.environ['HOME'],
+              dataFileName,
+              os.path.splitext(file.name)[1].lower()
+            )
+            with open(f, 'wb') as fh:
+              fh.write(bytearray(data))
 
     GLib.idle_add(self._changeIcon, False)
 
