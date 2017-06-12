@@ -10,12 +10,14 @@ import time
 
 from google.protobuf.json_format import MessageToJson
 from protobuf import act_samples_pb2  # ASAMPL0.BPB
+from protobuf import device_pb2       # DEVICE.BPB
 
 from polar import Device
 
 class PolarTray(Gtk.StatusIcon):
   FILE_MAPPINGS = {
     'ASAMPL0.BPB' : act_samples_pb2     .PbActivitySamples,
+    'DEVICE.BPB'  : device_pb2          .PbDeviceInfo
   }
 
   def __init__(self):
@@ -140,7 +142,7 @@ class PolarTray(Gtk.StatusIcon):
             os.path.splitext(file.name)[1].lower()
           )
           with open(f, 'wb') as fh:
-            fh.write(bytes(bytearray(data)))
+            fh.write(bytearray(data))
 
           if file.name in self.FILE_MAPPINGS.keys():
             parser = self.FILE_MAPPINGS[file.name]()
