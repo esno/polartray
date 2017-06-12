@@ -8,9 +8,16 @@ import os
 import threading
 import time
 
+from google.protobuf.json_format import MessageToJson
+from protobuf import act_samples_pb2  # ASAMPL0.BPB
+
 from polar import Device
 
 class PolarTray(Gtk.StatusIcon):
+  FILE_MAPPINGS = {
+    'ASAMPL0.BPB' : act_samples_pb2     .PbActivitySamples,
+  }
+
   def __init__(self):
     Gtk.StatusIcon.__init__(self)
     self.set_visible(False)
@@ -119,15 +126,36 @@ class PolarTray(Gtk.StatusIcon):
       files = [e for e in d.entries if not e.name.endswith(os.sep)]
       for file in files:
         if '.BPB' in file.name:
-          print('%s%s' % (directory, file.name))
           data = device.read_file('%s%s' % (directory, file.name))
 
-          if not os.path.isdir('%s/.local/polartray%s' % (os.environ['HOME'], directory)):
-            os.makedirs('%s/.local/polartray%s' % (os.environ['HOME'], directory))
+          dataFileName = '%s%s%s' % (
+            serial,
+            directory.replace(os.sep, '-').lower(),
+            os.path.splitext(file.name)[0].lower()
+          )
 
-          f = '%s/.local/polartray%s%s' % (os.environ['HOME'], directory, file.name)
+          f = '%s/.local/polartray/%s%s' % (
+            os.environ['HOME'],
+            dataFileName,
+            os.path.splitext(file.name)[1].lower()
+          )
           with open(f, 'wb') as fh:
-            fh.write(bytearray(data))
+            fh.write(bytes(bytearray(data)))
+
+          if file.name in self.FILE_MAPPINGS.keys():
+            parser = self.FILE_MAPPINGS[file.name]()
+
+            if file.name == 'SAMPLES.GZB':
+              data = zlib.decompress(data)
+
+            f = '%s/.local/polartray/%s.json' % (os.environ['HOME'], dataFileName)
+            try:
+              parser.ParseFromString(bytes(bytearray(data)))
+              with open(f, 'w') as fh:
+                fh.write(MessageToJson(parser))
+            except Exception as err:
+              print('failed to decode %s' % (dataFileName))
+              print(err)
 
     GLib.idle_add(self._changeIcon, False)
 
